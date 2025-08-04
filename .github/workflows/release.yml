@@ -10,20 +10,22 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
+      runs-on: ${{ matrix.os }}
 
     steps:
       - uses: actions/checkout@v3
 
-      - name: Configure
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DPATCH_VERSION=${{ github.run_number }}
+      - name: Configure (Ninja)
+        run: cmake -G "Ninja" -S . -B build -DPATCH_VERSION=${{ github.run_number }}
 
       - name: Build
-        run: cmake --build build --config Release
+        run: cmake --build build
 
-      - name: Run on Linux
-        if: matrix.os == 'ubuntu-latest'
-        run: ./build/helloworld_cli
-
-      - name: Run on Windows
-        if: matrix.os == 'windows-latest'
-        run: .\build\helloworld_cli.exe
+      - name: Run
+        shell: bash
+        run: |
+          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            ./build/helloworld_cli.exe
+          else
+            ./build/helloworld_cli
+          fi
