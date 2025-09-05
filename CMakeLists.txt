@@ -33,4 +33,7 @@ endif()
 
 install(TARGETS helloworld_cli DESTINATION bin)
 
+set(CPACK_PACKAGE_FILE_NAME "helloworld-${PROJECT_VERSION}")
+set(CPACK_PACKAGE_DIRECTORY "${CMAKE_BINARY_DIR}/package")
+
 include(CPack)

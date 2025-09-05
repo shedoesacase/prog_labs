@@ -82,6 +82,6 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ needs.bump_version.outputs.new_tag }}
-          files: build/*.zip build/*.tar.gz
+          files: package/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
