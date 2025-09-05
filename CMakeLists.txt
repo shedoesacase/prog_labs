@@ -21,3 +21,16 @@ configure_file(version.h.in version.h @ONLY)
 
 add_executable(helloworld_cli main.cpp)
 target_include_directories(helloworld_cli PRIVATE "${CMAKE_BINARY_DIR}")
+
+set(CPACK_PACKAGE_NAME "helloworld")
+set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
+
+if(WIN32)
+  set(CPACK_GENERATOR "ZIP")
+elseif(UNIX AND NOT APPLE)
+  set(CPACK_GENERATOR "TGZ")
+endif()
+
+install(TARGETS helloworld_cli DESTINATION bin)
+
+include(CPack)
