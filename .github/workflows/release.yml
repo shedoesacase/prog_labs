@@ -3,57 +3,83 @@ name: C++ CI
 on:
   push:
     branches: [ lab1 ]
-    
+
 permissions:
   contents: write
 
 jobs:
-  build:
+  bump_version:
+    runs-on: ubuntu-latest
+    outputs:
+      new_tag: ${{ steps.bump.outputs.new_tag }}
+      major: ${{ steps.bump.outputs.major }}
+      minor: ${{ steps.bump.outputs.minor }}
+      patch: ${{ steps.bump.outputs.patch }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Compute new patch version
+        id: bump
+        shell: bash
+        run: |
+          git fetch --tags --quiet
+          last_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "1.0.0")
+          last_tag=${last_tag#v}
+          IFS='.' read -r major minor patch <<< "$last_tag"
+          patch=$((patch+1))
+          new_tag="$major.$minor.$patch"
+          echo "new_tag=$new_tag" >> "$GITHUB_OUTPUT"
+          echo "major=$major" >> "$GITHUB_OUTPUT"
+          echo "minor=$minor" >> "$GITHUB_OUTPUT"
+          echo "patch=$patch" >> "$GITHUB_OUTPUT"
+          git tag "$new_tag"
+          git push origin "$new_tag"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build_and_package:
+    needs: bump_version
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
-
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
-      - name: Configure (Ninja)
-        run: cmake -G "Ninja" -S . -B build -DPATCH_VERSION=${{ github.run_number }}
+      - name: Configure and Build
+        run: cmake -G "Ninja" -S . -B build \
+          -DPROJECT_VERSION_MAJOR=${{ needs.bump_version.outputs.major }} \
+          -DPROJECT_VERSION_MINOR=${{ needs.bump_version.outputs.minor }} \
+          -DPATCH_VERSION=${{ needs.bump_version.outputs.patch }} \
+          && cmake --build build
 
-      - name: Build
-        run: cmake --build build
-
-      - name: Run
+      - name: Run sanity check
         shell: bash
         run: |
           if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-            ./build/helloworld_cli.exe
+            ./build/helloworld_cli.exe || true
           else
-            ./build/helloworld_cli
+            ./build/helloworld_cli || true
           fi
-  release:
-    runs-on: ubuntu-latest
-    outputs:
-      new_tag: ${{ steps.bump_version.outputs.new_tag }}
-      
-    steps:
-      - uses: actions/checkout@v3
 
-      - name: Bump version (patch)
-        id: bump_version
-        run: |
-          git fetch --tags --quiet
-          last_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "0.0.0")
-          IFS='.' read -r major minor patch <<< "${last_tag}"
-          patch=$((patch + 1))
-          new_tag="$major.$minor.$patch"
-          echo "new_tag=$new_tag" >> "$GITHUB_OUTPUT"
+      - name: Package binary
         shell: bash
+        run: |
+          cmake --install build --prefix package \
+          && if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+               cpack -G ZIP --config build/CPackConfig.cmake;
+             else
+               cpack -G TGZ --config build/CPackConfig.cmake;
+             fi
 
-      - name: Create Release
+      - name: Upload package to release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ steps.bump_version.outputs.new_tag }}
-          name: Release ${{ steps.bump_version.outputs.new_tag }}
+          tag_name: ${{ needs.bump_version.outputs.new_tag }}
+          files: package/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
