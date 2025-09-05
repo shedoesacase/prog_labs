@@ -59,7 +59,7 @@ jobs:
             -DPATCH_VERSION=${{ needs.bump_version.outputs.patch }} 
           cmake --build build
 
-      - name: Run sanity check
+      - name: Run check
         shell: bash
         run: |
           if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
@@ -82,6 +82,6 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ needs.bump_version.outputs.new_tag }}
-          files: package/*
+          files: build/*.zip build/*.tar.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
