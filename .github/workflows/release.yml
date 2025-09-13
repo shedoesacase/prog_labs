@@ -59,15 +59,19 @@ jobs:
             -DPATCH_VERSION=${{ needs.bump_version.outputs.patch }} 
           cmake --build build
 
-      - name: Run check
+      - name: Run check (windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Write-Host "Running on Windows"
+          .\build\ip_filter.exe
+
+        - name: Run check (windows)
+        if: runner.os != 'Windows'
         shell: bash
         run: |
-          echo "Running on ${{ matrix.os }}"
-          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-            ./build/ip_filter.exe || true
-          else
-            ./build/ip_filter || true
-          fi
+          echo "Running on Linux"
+          ./build/ip_filter
 
       - name: Package
         shell: bash
