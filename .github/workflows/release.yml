@@ -63,9 +63,9 @@ jobs:
         shell: bash
         run: |
           if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-            ./build/helloworld_cli.exe || true
+            ./build/main.exe || true
           else
-            ./build/helloworld_cli || true
+            ./build/main || true
           fi
 
       - name: Package
