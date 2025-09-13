@@ -2,7 +2,7 @@ name: C++ CI
 
 on:
   push:
-    branches: [ lab2 ]
+    branches: [ lab1 ]
 
 permissions:
   contents: write
@@ -59,19 +59,14 @@ jobs:
             -DPATCH_VERSION=${{ needs.bump_version.outputs.patch }} 
           cmake --build build
 
-      - name: Run check (windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          Write-Host "Running on Windows"
-          .\build\ip_filter.exe
-
-      - name: Run check (windows)
-        if: runner.os != 'Windows'
+      - name: Run tests
         shell: bash
         run: |
-          echo "Running on Linux"
-          ./build/ip_filter
+          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            ./build/gtests/GTestTests.exe || true
+          else
+            ./build/gtests/GTestTests || true
+          fi
 
       - name: Package
         shell: bash

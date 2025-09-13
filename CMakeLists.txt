@@ -14,15 +14,17 @@ endif()
 
 set(PROJECT_VERSION_PATCH ${PATCH_VERSION})
 
-project(helloworld VERSION
+project(filter VERSION
     ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH})
 
 configure_file(version.h.in version.h @ONLY) 
 
-add_executable(ip_filter main.cpp filter.cpp)
-target_include_directories(ip_filter PRIVATE "${CMAKE_BINARY_DIR}")
+add_executable(filter main.cpp filter.cpp)
+target_include_directories(filter PRIVATE "${CMAKE_BINARY_DIR}")
 
-set(CPACK_PACKAGE_NAME "helloworld")
+add_subdirectory(gtests)
+
+set(CPACK_PACKAGE_NAME "filter")
 set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
 
 if(WIN32)
@@ -31,9 +33,9 @@ elseif(UNIX AND NOT APPLE)
   set(CPACK_GENERATOR "TGZ")
 endif()
 
-install(TARGETS ip_filter DESTINATION bin)
+install(TARGETS filter DESTINATION bin)
 
-set(CPACK_PACKAGE_NAME "helloworld")
+set(CPACK_PACKAGE_NAME "filter")
 set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
 set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-${CMAKE_SYSTEM_NAME}")
 set(CPACK_OUTPUT_FILE_PREFIX "${CMAKE_BINARY_DIR}/package")
