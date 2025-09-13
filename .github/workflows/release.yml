@@ -63,9 +63,9 @@ jobs:
         shell: bash
         run: |
           if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-            ./build/main.exe || true
+            ./build/ip_filter.exe || true
           else
-            ./build/main || true
+            ./build/ip_filter || true
           fi
 
       - name: Package
